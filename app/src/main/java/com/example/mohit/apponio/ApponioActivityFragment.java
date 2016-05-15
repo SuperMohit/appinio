@@ -1,17 +1,22 @@
 package com.example.mohit.apponio;
 
+import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.apponio.entity.Activities;
 import com.apponio.entity.ActivityLog;
+import com.apponio.entity.Errors;
+import com.apponio.entity.JSError;
 import com.apponio.service.LogAPI;
 import com.apponio.util.CustomAdapter;
+import com.apponio.util.CustomAdapterError;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +33,7 @@ import retrofit.Retrofit;
 public class ApponioActivityFragment extends Fragment {
 
     private static final String baseURL = "http://172.31.99.39:8080/";
-    private List<ActivityLog> logs = new ArrayList<ActivityLog>();
+    private List<JSError> errors = new ArrayList<JSError>();
     public ApponioActivityFragment() {
     }
 
@@ -43,13 +48,13 @@ public class ApponioActivityFragment extends Fragment {
     private void fetchLogs() {
          Retrofit retrofit = getRetrofit(baseURL);
          LogAPI logAPI = retrofit.create(LogAPI.class);
-         Call<Activities> call = logAPI.getPopularMovies();
-         call.enqueue(new Callback<Activities>() {
+         Call<Errors> call = logAPI.getErrors();
+         call.enqueue(new Callback<Errors>() {
              @Override
-             public void onResponse(Response<Activities> response, Retrofit retrofit) {
-                 Log.d("Debug information",response.body().getActivityLogs().size()+"");
-                  if(response.body().getActivityLogs() !=null) {
-                      logs.addAll(response.body().getActivityLogs());
+             public void onResponse(Response<Errors> response, Retrofit retrofit) {
+                 Log.d("Debug information",response.body().getErrors().size()+"");
+                  if(response.body().getErrors() !=null) {
+                      errors.addAll(response.body().getErrors());
                       updateListView();
                   }
              }
@@ -63,7 +68,14 @@ public class ApponioActivityFragment extends Fragment {
 
     private void updateListView() {
         final ListView logview = (ListView) getView().findViewById(R.id.logView);
-        logview.setAdapter(new CustomAdapter(this.getContext(),logs));
+        logview.setAdapter(new CustomAdapterError(this.getContext(),errors));
+        logview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent intent = new Intent(getActivity(), BackActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
 
